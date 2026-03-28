@@ -1,12 +1,24 @@
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
-const path = require("path");
 require("dotenv").config();
 
+// Connect to MongoDB
+const connectDB = require("./config/db");
+connectDB();
+
 const app = express();
-app.use(cors());
-app.use(express.json());
+
+// Fix CORS - allow frontend to talk to backend (support multiple dev ports)
+app.use(cors({
+  origin: ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176"],
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
+}));
+
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // File upload setup
 const storage = multer.diskStorage({
@@ -21,14 +33,18 @@ const upload = multer({ storage });
 
 // Routes
 const suggestionsRouter = require("./routes/suggestions");
+const authRouter = require("./routes/auth");
+const adminRouter = require("./routes/admin");
+
 app.use("/api/suggestions", suggestionsRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/admin", adminRouter);
 
 // Test route
 app.get("/", (req, res) => {
   res.json({ message: "Resume shortlister backend is running!" });
 });
 
-// Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);
