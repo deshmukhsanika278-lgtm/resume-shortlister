@@ -4,6 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 import Welcome from "./pages/Welcome";
 import Login from "./pages/Login";
 import Upload from "./pages/Upload";
+import Compare from "./pages/Compare";
 import Admin from "./pages/Admin";
 import "./App.css";
 
@@ -24,6 +25,7 @@ function App() {
         <Route path="/" element={<Welcome />} />
         <Route path="/login" element={<Login />} />
         <Route path="/analyze" element={<Upload />} />
+        <Route path="/compare" element={<Compare />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

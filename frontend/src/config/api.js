@@ -9,6 +9,7 @@ export const API_ENDPOINTS = {
   ANALYZE_TEXT: `${API_BASE_URL}/suggestions`,
   ANALYZE_PDF: `${API_BASE_URL}/suggestions/analyze-pdf`,
   DOWNLOAD_PDF: `${API_BASE_URL}/suggestions/download`,
+  BATCH_COMPARE: `${API_BASE_URL}/suggestions/batch-compare`,
   
   // Admin endpoints
   GET_SUBMISSIONS: `${API_BASE_URL}/admin/submissions`,

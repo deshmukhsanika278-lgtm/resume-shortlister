@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const pdfParse = require("pdf-parse");
 const { generateSuggestions } = require("../services/suggestionService");
 const { generatePDF } = require("../services/pdfService");
+const { extractTextFromPDF } = require("../services/pdfExtractorService");
 const ResumeSubmission = require("../models/ResumeSubmission");
 
 // Configure multer for PDF uploads
@@ -123,24 +123,18 @@ router.post("/analyze-pdf", (req, res, next) => {
       });
     }
 
-    // Extract text from PDF
-    let resumeText = "";
-    try {
-      const pdfData = await pdfParse(req.file.buffer);
-      resumeText = pdfData.text;
-    } catch (pdfErr) {
-      return res.status(400).json({
-        success: false,
-        error: "Failed to parse PDF. Make sure it's a text-based PDF (not an image-only PDF). Error: " + pdfErr.message
-      });
-    }
+    // Extract text from PDF (handles both text-based and image-based PDFs)
+    console.log("🔄 Processing PDF with enhanced extractor...");
+    const resumeText = await extractTextFromPDF(req.file.buffer);
 
     if (!resumeText || resumeText.trim().length === 0) {
       return res.status(400).json({
         success: false,
-        error: "Could not extract any text from PDF. Please use a text-based PDF, not an image-only scanned document."
+        error: "Could not extract any text from PDF. Please ensure the file is readable."
       });
     }
+
+    console.log(`✅ PDF processed successfully: ${resumeText.length} characters extracted`);
 
     // Generate suggestions
     const suggestions = await generateSuggestions(resumeText, jobDescription);
@@ -206,6 +200,97 @@ router.post("/download", async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Failed to generate PDF: " + err.message
+    });
+  }
+});
+
+// POST /api/suggestions/batch-compare - Compare multiple resumes
+router.post("/batch-compare", async (req, res) => {
+  try {
+    const { jobDescription, candidates } = req.body;
+
+    // Validate inputs
+    if (!jobDescription) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required field: jobDescription"
+      });
+    }
+
+    if (!candidates || !Array.isArray(candidates) || candidates.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing or invalid candidates array. Provide at least 2 candidates."
+      });
+    }
+
+    if (candidates.length < 2 || candidates.length > 5) {
+      return res.status(400).json({
+        success: false,
+        error: "Please provide between 2 and 5 candidates for comparison"
+      });
+    }
+
+    // Validate each candidate
+    for (let candidate of candidates) {
+      if (!candidate.candidateName || !candidate.resumeText) {
+        return res.status(400).json({
+          success: false,
+          error: "Each candidate must have candidateName and resumeText"
+        });
+      }
+    }
+
+    // Analyze all resumes in parallel
+    const analysisPromises = candidates.map(async (candidate) => {
+      const suggestions = await generateSuggestions(candidate.resumeText, jobDescription);
+      return {
+        candidateName: candidate.candidateName,
+        score: suggestions.score || 0,
+        missingSkills: suggestions.missingSkills || [],
+        weakSections: suggestions.weakSections || [],
+        formattingTips: suggestions.formattingTips || [],
+        verdict: suggestions.verdict || "",
+      };
+    });
+
+    const results = await Promise.all(analysisPromises);
+
+    // Save each submission to database
+    for (let i = 0; i < candidates.length; i++) {
+      const candidate = candidates[i];
+      const result = results[i];
+
+      const submissionData = {
+        candidateName: candidate.candidateName,
+        score: result.score,
+        missingSkills: result.missingSkills,
+        weakSections: result.weakSections,
+        formattingTips: result.formattingTips,
+        verdict: result.verdict,
+        jobDescription: jobDescription.substring(0, 500),
+        resumeText: candidate.resumeText.substring(0, 2000),
+        fileType: "txt",
+        feedback: result.verdict || "",
+        timestamp: new Date(),
+      };
+
+      await saveSubmission(submissionData);
+    }
+
+    res.json({
+      success: true,
+      results: results,
+      totalCandidates: results.length,
+      bestMatch: results.reduce((best, current) => 
+        current.score > best.score ? current : best
+      )
+    });
+  } catch (err) {
+    console.error("❌ Error in POST /batch-compare:", err.message);
+    res.status(500).json({
+      success: false,
+      error: "Failed to compare resumes: " + err.message
     });
   }
 });
