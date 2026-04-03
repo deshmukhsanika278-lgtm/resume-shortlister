@@ -9,9 +9,17 @@ connectDB();
 
 const app = express();
 
-// Fix CORS - allow frontend to talk to backend (support multiple dev ports)
+// Fix CORS - allow frontend to talk to backend
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
+  "http://localhost:5176",
+  process.env.FRONTEND_URL || ""
+].filter(Boolean);
+
 app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176"],
+  origin: allowedOrigins,
   methods: ["GET", "POST"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
