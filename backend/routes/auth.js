@@ -16,6 +16,12 @@ const fallbackUsers = [
     email: "admin@resume-shortlister.com",
     password: "admin123",
     name: "Demo Admin"
+  },
+  {
+    id: 3,
+    email: "manager@resume-shortlister.com",
+    password: "Manager@2026!",
+    name: "Team Manager"
   }
 ];
 
