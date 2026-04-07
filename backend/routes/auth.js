@@ -82,5 +82,63 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// Register new admin endpoint
+router.post("/register-admin", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    // Validate input
+    if (!name || !email || !password) {
+      return res.status(400).json({ 
+        message: "Name, email, and password are required" 
+      });
+    }
+
+    // Validate password strength
+    if (password.length < 8) {
+      return res.status(400).json({ 
+        message: "Password must be at least 8 characters long" 
+      });
+    }
+
+    // Check if admin already exists
+    try {
+      const existingAdmin = await AdminUser.findOne({ email: email.toLowerCase() });
+      if (existingAdmin) {
+        return res.status(409).json({ 
+          message: "Admin with this email already exists" 
+        });
+      }
+    } catch (dbErr) {
+      console.log("Database check failed, proceeding...", dbErr.message);
+    }
+
+    // Create new admin
+    const newAdmin = new AdminUser({
+      name,
+      email: email.toLowerCase(),
+      password,
+      role: "admin",
+      active: true
+    });
+
+    await newAdmin.save();
+
+    res.status(201).json({
+      message: "Admin account created successfully",
+      admin: {
+        id: newAdmin._id,
+        name: newAdmin.name,
+        email: newAdmin.email,
+        role: newAdmin.role,
+        createdAt: newAdmin.createdAt
+      }
+    });
+  } catch (error) {
+    console.error("Admin registration error:", error);
+    res.status(500).json({ message: "Failed to create admin account" });
+  }
+});
+
 module.exports = router;
 
