@@ -34,15 +34,6 @@ export default function Login() {
     }
   };
 
-  const handleDemo = async () => {
-    setEmail("admin@resume-shortlister.com");
-    setPassword("admin123");
-    // Will be submitted by form after state updates
-    setTimeout(() => {
-      document.getElementById("loginForm").dispatchEvent(new Event("submit", { bubbles: true }));
-    }, 0);
-  };
-
   return (
     <div className="login-container">
       <div className="login-card">
@@ -82,19 +73,6 @@ export default function Login() {
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
-
-        <div className="demo-section">
-          <p>Demo Credentials:</p>
-          <button 
-            type="button"
-            className="btn btn-secondary"
-            onClick={handleDemo}
-            disabled={loading}
-          >
-            Try Demo Account
-          </button>
-          <p className="demo-hint">Email: admin@resume-shortlister.com</p>
-        </div>
 
         <div className="login-footer">
           <button 
