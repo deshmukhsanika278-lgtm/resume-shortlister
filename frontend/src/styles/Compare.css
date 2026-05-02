@@ -125,6 +125,7 @@ textarea {
   font-family: inherit;
   transition: all 0.3s ease;
   background: #fafafa;
+  color: #000;
 }
 
 input[type="text"]:focus,

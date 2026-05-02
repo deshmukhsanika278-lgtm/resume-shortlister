@@ -58,6 +58,7 @@
   transition: all 0.3s ease;
   box-sizing: border-box;
   background: #f7fafc;
+  color: #000;
 }
 
 .form-group input:focus,
