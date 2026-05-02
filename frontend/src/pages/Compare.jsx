@@ -262,6 +262,7 @@ export default function Compare() {
                         });
                     }
                   }}
+                  rows="6"
                   aria-invalid={!!fieldErrors.jobDescription}
                   aria-describedby={
                     fieldErrors.jobDescription ? "job-error" : undefined
