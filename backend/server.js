@@ -3,9 +3,9 @@ const cors = require("cors");
 const multer = require("multer");
 require("dotenv").config();
 
-// Connect to MySQL
+// Connect to MySQL (non-blocking)
 const { connectDB } = require("./config/db");
-connectDB();
+connectDB().catch(err => console.error("DB error:", err.message));
 
 const app = express();
 

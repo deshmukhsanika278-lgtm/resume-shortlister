@@ -47,11 +47,11 @@ const ResumeSubmission = sequelize.define(
       allowNull: true,
     },
     jobDescription: {
-      type: DataTypes.LONGTEXT,
+      type: DataTypes.TEXT("long"),
       allowNull: true,
     },
     resumeText: {
-      type: DataTypes.LONGTEXT,
+      type: DataTypes.TEXT("long"),
       allowNull: true,
     },
     fileType: {
@@ -59,7 +59,7 @@ const ResumeSubmission = sequelize.define(
       defaultValue: "txt",
     },
     feedback: {
-      type: DataTypes.LONGTEXT,
+      type: DataTypes.TEXT("long"),
       allowNull: true,
     },
   },
