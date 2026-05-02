@@ -48,9 +48,11 @@ router.post("/login", async (req, res) => {
 
     let user = null;
 
-    // Try to find user in MongoDB
+    // Try to find user in MySQL
     try {
-      user = await AdminUser.findOne({ email, active: true });
+      user = await AdminUser.findOne({ 
+        where: { email: email.toLowerCase(), active: true } 
+      });
 
       if (user && (await user.comparePassword(password))) {
         const token = createToken(user);
@@ -109,7 +111,9 @@ router.post("/register-admin", async (req, res) => {
 
     // Check if admin already exists
     try {
-      const existingAdmin = await AdminUser.findOne({ email: email.toLowerCase() });
+      const existingAdmin = await AdminUser.findOne({ 
+        where: { email: email.toLowerCase() } 
+      });
       if (existingAdmin) {
         return res.status(409).json({ 
           message: "Admin with this email already exists" 
@@ -120,7 +124,7 @@ router.post("/register-admin", async (req, res) => {
     }
 
     // Create new admin
-    const newAdmin = new AdminUser({
+    const newAdmin = await AdminUser.create({
       name,
       email: email.toLowerCase(),
       password,
@@ -128,12 +132,10 @@ router.post("/register-admin", async (req, res) => {
       active: true
     });
 
-    await newAdmin.save();
-
     res.status(201).json({
       message: "Admin account created successfully",
       admin: {
-        id: newAdmin._id,
+        id: newAdmin.id,
         name: newAdmin.name,
         email: newAdmin.email,
         role: newAdmin.role,

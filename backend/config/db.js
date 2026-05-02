@@ -1,18 +1,38 @@
-const mongoose = require("mongoose");
+const { Sequelize } = require("sequelize");
+
+const sequelize = new Sequelize(
+  process.env.DB_NAME || "resume_shortlister",
+  process.env.DB_USER || "root",
+  process.env.DB_PASSWORD || "password",
+  {
+    host: process.env.DB_HOST || "localhost",
+    port: process.env.DB_PORT || 3306,
+    dialect: "mysql",
+    logging: process.env.NODE_ENV === "production" ? false : console.log,
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000,
+    },
+  }
+);
 
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGODB_URI || "mongodb://localhost:27017/resume-shortlister";
+    await sequelize.authenticate();
+    console.log("✅ MySQL connected successfully!");
     
-    await mongoose.connect(mongoURI);
-
-    console.log("✅ MongoDB connected successfully!");
-    return mongoose;
+    // Sync all models with database
+    await sequelize.sync({ alter: true });
+    console.log("✅ Database tables synced successfully!");
+    
+    return sequelize;
   } catch (error) {
-    console.error("❌ MongoDB connection error:", error.message);
+    console.error("❌ MySQL connection error:", error.message);
     console.log("⚠️  Running without database - using in-memory storage");
     return null;
   }
 };
 
-module.exports = connectDB;
+module.exports = { sequelize, connectDB };

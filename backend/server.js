@@ -3,8 +3,8 @@ const cors = require("cors");
 const multer = require("multer");
 require("dotenv").config();
 
-// Connect to MongoDB
-const connectDB = require("./config/db");
+// Connect to MySQL
+const { connectDB } = require("./config/db");
 connectDB();
 
 const app = express();

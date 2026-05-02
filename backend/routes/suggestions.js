@@ -30,8 +30,7 @@ let allSubmissions = [];
 // Helper function to save submission
 const saveSubmission = async (submissionData) => {
   try {
-    const newSubmission = new ResumeSubmission(submissionData);
-    await newSubmission.save();
+    const newSubmission = await ResumeSubmission.create(submissionData);
     return newSubmission;
   } catch (dbErr) {
     console.log("💾 Saving to in-memory storage");

@@ -1,46 +1,81 @@
-const mongoose = require("mongoose");
+const { DataTypes } = require("sequelize");
+const { sequelize } = require("../config/db");
 
-const resumeSubmissionSchema = new mongoose.Schema(
+const ResumeSubmission = sequelize.define(
+  "ResumeSubmission",
   {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
     candidateName: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING,
+      allowNull: false,
       index: true,
     },
     email: {
-      type: String,
+      type: DataTypes.STRING,
       lowercase: true,
-      sparse: true,
+      allowNull: true,
     },
     score: {
-      type: Number,
-      min: 0,
-      max: 100,
-      required: true,
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        min: 0,
+        max: 100,
+      },
     },
-    missingSkills: [String],
-    weakSections: [String],
-    formattingTips: [String],
-    verdict: String,
-    jobDescription: String,
-    resumeText: String,
+    missingSkills: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: [],
+    },
+    weakSections: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: [],
+    },
+    formattingTips: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: [],
+    },
+    verdict: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    jobDescription: {
+      type: DataTypes.LONGTEXT,
+      allowNull: true,
+    },
+    resumeText: {
+      type: DataTypes.LONGTEXT,
+      allowNull: true,
+    },
     fileType: {
-      type: String,
-      enum: ["txt", "pdf"],
-      default: "txt",
+      type: DataTypes.ENUM("txt", "pdf"),
+      defaultValue: "txt",
     },
-    feedback: String,
-    timestamp: {
-      type: Date,
-      default: Date.now,
-      index: true,
+    feedback: {
+      type: DataTypes.LONGTEXT,
+      allowNull: true,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    indexes: [
+      {
+        fields: ["createdAt"],
+        name: "idx_createdAt",
+      },
+      {
+        fields: ["score"],
+        name: "idx_score",
+      },
+    ],
+  }
 );
 
-// Create index for analytics queries
-resumeSubmissionSchema.index({ timestamp: -1 });
-resumeSubmissionSchema.index({ score: -1 });
-
-module.exports = mongoose.model("ResumeSubmission", resumeSubmissionSchema);
+module.exports = ResumeSubmission;

@@ -54,9 +54,12 @@ router.get("/submissions", verifyToken, async (req, res) => {
   try {
     let data;
     
-    // Try to get from MongoDB if available
+    // Try to get from MySQL if available
     try {
-      data = await ResumeSubmission.find().sort({ timestamp: -1 }).limit(100);
+      data = await ResumeSubmission.findAll({ 
+        order: [["createdAt", "DESC"]], 
+        limit: 100 
+      });
     } catch (dbErr) {
       // Fall back to in-memory data
       console.log("Using in-memory submissions");
@@ -76,8 +79,12 @@ router.get("/stats", verifyToken, async (req, res) => {
     let stats = {};
 
     try {
-      // Try to get from MongoDB
-      const dbSubmissions = await ResumeSubmission.find();
+      // Try to get from MySQL
+      const dbSubmissions = await ResumeSubmission.findAll();
+      const { count: totalCandidates } = await ResumeSubmission.findAndCountAll({
+        distinct: true,
+        col: "candidateName"
+      });
       
       stats = {
         totalSubmissions: dbSubmissions.length,
@@ -87,9 +94,7 @@ router.get("/stats", verifyToken, async (req, res) => {
                 dbSubmissions.length
             )
           : 0,
-        totalCandidates: new Set(
-          dbSubmissions.map((s) => s.candidateName)
-        ).size,
+        totalCandidates: totalCandidates,
         highPerformers: dbSubmissions.filter((s) => s.score >= 75).length,
       };
     } catch (dbErr) {
@@ -131,8 +136,8 @@ router.post("/submissions", verifyToken, async (req, res) => {
     } = req.body;
 
     try {
-      // Try to save to MongoDB
-      const newSubmission = new ResumeSubmission({
+      // Try to save to MySQL
+      const newSubmission = await ResumeSubmission.create({
         candidateName,
         score,
         missingSkills,
@@ -142,10 +147,9 @@ router.post("/submissions", verifyToken, async (req, res) => {
         fileType: fileType || "txt",
       });
 
-      const saved = await newSubmission.save();
       res.json({
         message: "Submission recorded",
-        submission: saved,
+        submission: newSubmission,
       });
     } catch (dbErr) {
       // Fall back to in-memory storage
